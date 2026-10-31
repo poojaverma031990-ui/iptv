@@ -78,15 +78,16 @@ header {
   color: #040914;
   font-size: 0.82rem;
   margin-right: 0.5rem;
+  overflow: hidden;
 }
 
 .logo-badge {
   font-size: 0.58rem;
-  background: rgba(0, 242, 254, 0.15);
+  background: rgba(0, 242, 254, 0.2);
   color: #00f2fe;
   padding: 1px 6px;
   border-radius: 12px;
-  border: 1px solid rgba(0, 242, 254, 0.3);
+  border: 1px solid rgba(0, 242, 254, 0.4);
   text-transform: uppercase;
   margin-left: 4px;
 }
@@ -98,6 +99,30 @@ header {
   -webkit-box-align: center;
   -webkit-align-items: center;
   align-items: center;
+}
+
+/* Country Dropdown Styling */
+.country-select-container {
+  margin-bottom: 0.6rem;
+}
+
+.country-dropdown {
+  width: 100%;
+  background: #172033;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.country-dropdown option {
+  background: #0f1523;
+  color: #f8fafc;
 }
 
 .btn {
@@ -129,22 +154,17 @@ header {
   font-weight: 700;
 }
 
-.btn-accent {
-  background: rgba(0, 255, 170, 0.15);
-  border: 1px solid rgba(0, 255, 170, 0.4);
-  color: #00ffaa;
-}
-
 /* Android TV Focus & Active Halo */
 .btn:focus, .btn.tv-focus,
 .ctrl-btn:focus, .ctrl-btn.tv-focus,
 .cat-tab:focus, .cat-tab.tv-focus,
 .channel-card:focus, .channel-card.tv-focus,
+.country-dropdown:focus,
 .search-input:focus,
 .logo:focus {
   outline: 2px solid #00f2fe !important;
   box-shadow: 0 0 14px rgba(0, 242, 254, 0.9) !important;
-  background: rgba(0, 242, 254, 0.22) !important;
+  background: rgba(0, 242, 254, 0.2) !important;
 }
 
 /* Universal Flexbox Layout */
@@ -290,9 +310,9 @@ video {
   position: absolute;
   top: 0.75rem;
   left: 0.75rem;
-  background: rgba(239, 68, 68, 0.3);
-  border: 1px solid rgba(239, 68, 68, 0.5);
-  color: #ef4444;
+  background: rgba(0, 242, 254, 0.25);
+  border: 1px solid rgba(0, 242, 254, 0.5);
+  color: #00f2fe;
   padding: 0.2rem 0.5rem;
   border-radius: 12px;
   font-size: 0.7rem;
@@ -399,13 +419,8 @@ video {
   justify-content: center;
 }
 
-.active-details h2 {
-  font-size: 1.05rem;
-  margin-bottom: 0.2rem;
-}
-
 .tag-category {
-  background: rgba(0, 242, 254, 0.15);
+  background: rgba(0, 242, 254, 0.2);
   color: #00f2fe;
   padding: 1px 6px;
   border-radius: 4px;
@@ -502,8 +517,8 @@ video {
 }
 
 .channel-card.active {
-  background: rgba(0, 242, 254, 0.15);
-  border-color: rgba(0, 242, 254, 0.4);
+  background: rgba(0, 242, 254, 0.18);
+  border-color: rgba(0, 242, 254, 0.5);
 }
 
 /* Robust Icon Framework */

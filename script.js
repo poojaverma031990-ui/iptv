@@ -1,73 +1,44 @@
 /**
- * BharatStream IPTV Pro - 2012 Android 4.4 KitKat ES5 Engine
- * Full TV Remote Support, Infinite Auto-Scroll, Dynamic Logo & Monogram Engine
+ * IPTV Country Engine - 2012 Android 4.4 KitKat ES5 Compatible
+ * Supports Country Dropdown Selector with India as default, and Entertainment, Kids, News, Sports subcategories
  */
 (function() {
-  // Inbuilt GitHub IPTV Source
-  var PLAYLIST_SOURCES = [
-    'https://iptv-org.github.io/iptv/index.m3u'
-  ];
-
-  // Deterministic color palette for high-contrast channel emblems
   var COLOR_PALETTE = [
-    '#0284c7', '#0d9488', '#16a34a', '#ca8a04', '#ea580c', '#e11d48', '#9333ea', '#4f46e5', '#2563eb'
+    '#00f2fe', '#138808', '#000080', '#b91c1c', '#0284c7', '#0d9488', '#9333ea', '#ca8a04'
   ];
 
-  // Reliable Starter Channels
-  var DEFAULT_CHANNELS = [
+  var INDIA_DEFAULT_CHANNELS = [
     {
-      id: 'dd-news',
-      name: 'DD News Live (India)',
+      id: 'india-news-1',
+      name: 'NDTV 24x7 (India)',
       category: 'news',
-      logo: 'https://raw.githubusercontent.com/iptv-org/epg/master/logos/DDNews.in.png',
-      url: 'https://ddnews.akamaized.net/hls/live/2012012/ddnews/master.m3u8'
-    },
-    {
-      id: 'aaj-tak',
-      name: 'Aaj Tak Live',
-      category: 'news',
-      logo: 'https://raw.githubusercontent.com/iptv-org/epg/master/logos/AajTak.in.png',
-      url: 'https://feeds.intoday.in/aajtak/api/hls/master.m3u8'
-    },
-    {
-      id: 'india-today',
-      name: 'India Today HD',
-      category: 'news',
-      logo: 'https://raw.githubusercontent.com/iptv-org/epg/master/logos/IndiaToday.in.png',
-      url: 'https://feeds.intoday.in/indiatoday/api/hls/master.m3u8'
-    },
-    {
-      id: 'red-bull-tv',
-      name: 'Red Bull Extreme Sports',
-      category: 'sports',
-      logo: 'https://raw.githubusercontent.com/iptv-org/epg/master/logos/RedBullTV.at.png',
-      url: 'https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8'
-    },
-    {
-      id: 'cinema-showcase',
-      name: 'Cinema Showcase HD',
-      category: 'movies',
-      logo: 'https://raw.githubusercontent.com/iptv-org/epg/master/logos/Showcase.uk.png',
+      logo: '',
       url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'
     },
     {
-      id: 'france-24',
-      name: 'France 24 English',
-      category: 'news',
-      logo: 'https://raw.githubusercontent.com/iptv-org/epg/master/logos/France24English.fr.png',
-      url: 'https://static.france24.com/live/F24_EN_LO_HLS/live_tv.m3u8'
+      id: 'india-sport-1',
+      name: 'Sports India Live',
+      category: 'sports',
+      logo: '',
+      url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'
     },
     {
-      id: 'dw-english',
-      name: 'DW News HD',
-      category: 'news',
-      logo: 'https://raw.githubusercontent.com/iptv-org/epg/master/logos/DWEspanol.de.png',
-      url: 'https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8'
+      id: 'india-kids-1',
+      name: 'Kids India Toons',
+      category: 'kids',
+      logo: '',
+      url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'
+    },
+    {
+      id: 'india-ent-1',
+      name: 'Zee TV / Entertainment India',
+      category: 'entertainment',
+      logo: '',
+      url: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'
     }
   ];
 
-  // ES5 State
-  var channels = DEFAULT_CHANNELS.slice(0);
+  var channels = INDIA_DEFAULT_CHANNELS.slice(0);
   var filteredChannels = [];
   var activeChannel = null;
   var currentCategory = 'all';
@@ -77,7 +48,6 @@
   var isPseudoFullscreen = false;
   var isRendering = false;
 
-  // DOM Elements
   var videoPlayer = document.getElementById('main-player');
   var videoWrapper = document.getElementById('video-wrapper');
   var channelListContainer = document.getElementById('channel-list');
@@ -87,6 +57,9 @@
   var playlistNameDisplay = document.getElementById('playlist-name');
   var loadingOverlay = document.getElementById('loading-overlay');
   var loadingMsg = document.getElementById('loading-msg');
+  var countryDropdown = document.getElementById('country-dropdown');
+  var headerRegionBadge = document.getElementById('header-region-badge');
+  var liveBadgeText = document.getElementById('live-badge-text');
 
   var btnPlayPause = document.getElementById('btn-play-pause');
   var btnMute = document.getElementById('btn-mute');
@@ -96,7 +69,6 @@
   var btnPip = document.getElementById('btn-pip');
   var btnExternalPlayer = document.getElementById('btn-external-player');
   var btnRefresh = document.getElementById('btn-refresh');
-  var btnLoadInbuilt = document.getElementById('btn-load-inbuilt');
   
   var currentLogo = document.getElementById('current-ch-logo');
   var currentMonogram = document.getElementById('current-ch-monogram');
@@ -111,7 +83,6 @@
   var m3uUrlInput = document.getElementById('m3u-url-input');
   var toastMsg = document.getElementById('toast-msg');
 
-  // Generates 1-2 character initials for channel logo fallback
   function getChannelMonogram(name) {
     if (!name) return 'TV';
     var clean = name.replace(/[^a-zA-Z0-9 ]/g, '').trim();
@@ -122,7 +93,6 @@
     return clean.substring(0, 2).toUpperCase() || 'TV';
   }
 
-  // Deterministic badge color
   function getChannelColor(name) {
     var hash = 0;
     for (var i = 0; i < (name || '').length; i++) {
@@ -132,42 +102,62 @@
     return COLOR_PALETTE[idx];
   }
 
-  // Category Icon helper
   function getCategoryIcon(cat) {
     var c = (cat || '').toLowerCase();
     if (c.indexOf('news') !== -1) return 'fa-solid fa-newspaper';
     if (c.indexOf('movie') !== -1 || c.indexOf('cinema') !== -1) return 'fa-solid fa-film';
     if (c.indexOf('sport') !== -1) return 'fa-solid fa-futbol';
     if (c.indexOf('music') !== -1) return 'fa-solid fa-music';
-    if (c.indexOf('doc') !== -1) return 'fa-solid fa-earth-americas';
+    if (c.indexOf('kids') !== -1 || c.indexOf('child') !== -1) return 'fa-solid fa-child';
     if (c.indexOf('enter') !== -1) return 'fa-solid fa-tv';
-    return 'fa-solid fa-broadcast-tower';
+    return 'fa-solid fa-globe';
   }
 
-  // Initialize ES5 Engine
   function init() {
     if (!videoPlayer) return;
     setupEventListeners();
     setupTvRemoteNavigation();
     setupInfiniteScroll();
     
-    playChannel(channels[0]);
-    applyFilterAndRender();
-    
-    // In background load the GitHub IPTV playlist
-    loadAllBackgroundPlaylists();
+    // Auto load default India M3U on startup
+    loadSelectedCountry('https://iptv-org.github.io/iptv/countries/in.m3u');
   }
 
-  // Playback Logic supporting native Android KitKat HLS and Hls.js fallback
+  function loadSelectedCountry(url) {
+    var selectedOptionText = countryDropdown.options[countryDropdown.selectedIndex].text;
+    if (loadingOverlay) loadingOverlay.className = 'loading-overlay active';
+    if (loadingMsg) loadingMsg.innerHTML = 'Loading ' + selectedOptionText + '...';
+
+    fetchM3U(url, selectedOptionText, function(err, items) {
+      if (loadingOverlay) loadingOverlay.className = 'loading-overlay';
+      if (!err && items && items.length > 0) {
+        channels = items;
+        if (playlistNameDisplay) playlistNameDisplay.innerHTML = selectedOptionText;
+        if (headerRegionBadge) headerRegionBadge.innerHTML = selectedOptionText.replace(/[^a-zA-Z]/g, '').substring(0, 5).toUpperCase();
+        if (liveBadgeText) liveBadgeText.innerHTML = 'LIVE ' + selectedOptionText.toUpperCase();
+        playChannel(channels[0]);
+        applyFilterAndRender();
+        showToast('Loaded ' + items.length + ' channels for ' + selectedOptionText + '!');
+      } else {
+        channels = INDIA_DEFAULT_CHANNELS.slice(0);
+        if (playlistNameDisplay) playlistNameDisplay.innerHTML = 'India';
+        if (headerRegionBadge) headerRegionBadge.innerHTML = 'INDIA';
+        if (liveBadgeText) liveBadgeText.innerHTML = 'LIVE INDIA';
+        playChannel(channels[0]);
+        applyFilterAndRender();
+        showToast('Loaded fallback channels.');
+      }
+    });
+  }
+
   function playChannel(ch) {
     if (!ch) return;
     activeChannel = ch;
 
     if (currentTitle) currentTitle.innerHTML = ch.name;
     if (currentCat) currentCat.innerHTML = (ch.category || 'GENERAL').toUpperCase();
-    if (currentSource) currentSource.innerHTML = ch.source || 'GitHub IPTV';
+    if (currentSource) currentSource.innerHTML = ch.source || 'IPTV Stream';
     
-    // Meta header logo & monogram setup
     var mono = getChannelMonogram(ch.name);
     var color = getChannelColor(ch.name);
     
@@ -196,8 +186,6 @@
 
     var url = ch.url;
     var isHls = url.indexOf('.m3u8') !== -1;
-
-    // On Android 4.4 KitKat native Stagefright player plays HLS natively via video.src
     var isAndroid = /Android/i.test(navigator.userAgent);
     var canNativeHls = videoPlayer.canPlayType('application/vnd.apple.mpegurl') || 
                        videoPlayer.canPlayType('application/x-mpegURL');
@@ -230,7 +218,6 @@
     highlightActiveCard();
   }
 
-  // Filter and Batch Rendering with Infinite Auto-Scroll
   function applyFilterAndRender() {
     if (!channelListContainer) return;
     var query = (searchInput ? searchInput.value || '' : '').toLowerCase();
@@ -241,7 +228,10 @@
     for (var i = 0; i < channels.length; i++) {
       var ch = channels[i];
       var cat = (ch.category || '').toLowerCase();
-      var matchesCat = (currentCategory === 'all') || (cat.indexOf(currentCategory) !== -1);
+      var matchesCat = true;
+      if (currentCategory !== 'all') {
+        matchesCat = (cat.indexOf(currentCategory) !== -1);
+      }
       var matchesQuery = !query || (ch.name.toLowerCase().indexOf(query) !== -1);
       if (matchesCat && matchesQuery) {
         filteredChannels.push(ch);
@@ -253,7 +243,7 @@
     }
 
     if (filteredChannels.length === 0) {
-      channelListContainer.innerHTML = '<div style="text-align:center; padding: 2.5rem; color: #94a3b8;">No channels found</div>';
+      channelListContainer.innerHTML = '<div style="text-align:center; padding: 2.5rem; color: #94a3b8;">No channels found in this category</div>';
       return;
     }
 
@@ -280,7 +270,6 @@
         var color = getChannelColor(ch.name);
         var iconClass = getCategoryIcon(ch.category);
 
-        // Guaranteed Fallback Architecture (NO question mark icon EVER)
         var hasUrl = ch.logo && ch.logo.length > 5;
         var html = '<div class="ch-logo-wrap" style="background-color:' + color + ';">' +
                      '<div class="ch-fallback-icon"><i class="' + iconClass + '"></i></div>';
@@ -310,7 +299,6 @@
     isRendering = false;
   }
 
-  // Continuous Infinite Scroll
   function setupInfiniteScroll() {
     if (!channelListContainer) return;
     channelListContainer.addEventListener('scroll', function() {
@@ -340,7 +328,6 @@
     }
   }
 
-  // Fast ES5 M3U Parser
   function parseM3U(content, srcLabel) {
     var lines = content.split(/\r?\n/);
     var list = [];
@@ -353,7 +340,7 @@
       if (line.indexOf('#EXTINF:') === 0) {
         cur = {
           id: 'ch_' + list.length + '_' + Math.floor(Math.random() * 1000000),
-          source: srcLabel || 'GitHub IPTV'
+          source: srcLabel || 'IPTV'
         };
         
         var logoMatch = line.match(/tvg-logo="([^"]+)"/i);
@@ -382,7 +369,6 @@
     return list;
   }
 
-  // Fetch M3U via XMLHttpRequest (KitKat 4.4 compatible)
   function fetchM3U(url, label, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
@@ -393,7 +379,6 @@
           var parsed = parseM3U(xhr.responseText, label);
           callback(null, parsed);
         } else {
-          // CORS proxy fallback
           var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
           var xhrProxy = new XMLHttpRequest();
           xhrProxy.open('GET', proxyUrl, true);
@@ -414,69 +399,38 @@
     xhr.send();
   }
 
-  function loadAllBackgroundPlaylists() {
-    if (loadingOverlay) loadingOverlay.className = 'loading-overlay active';
-    if (loadingMsg) loadingMsg.innerHTML = 'Connecting to GitHub IPTV...';
-
-    var idx = 0;
-    function next() {
-      if (idx >= PLAYLIST_SOURCES.length) {
-        if (loadingOverlay) loadingOverlay.className = 'loading-overlay';
-        applyFilterAndRender();
-        return;
-      }
-      var sourceUrl = PLAYLIST_SOURCES[idx];
-      idx++;
-      fetchM3U(sourceUrl, 'GitHub IPTV', function(err, items) {
-        if (!err && items && items.length > 0) {
-          for (var j = 0; j < items.length; j++) {
-            channels.push(items[j]);
-          }
-          applyFilterAndRender();
-        }
-        next();
-      });
-    }
-    next();
-  }
-
-  // Complete 2012 Android TV Remote Control Navigation Engine
   function setupTvRemoteNavigation() {
     document.addEventListener('keydown', function(e) {
       var code = e.keyCode || e.which;
 
-      // Play / Pause media keys
       if (code === 179 || code === 85 || code === 126 || code === 127) {
         e.preventDefault();
         togglePlayPause();
         return;
       }
 
-      // Channel Up / Channel Down keys on TV remotes
-      if (code === 166 || code === 33) { // Channel Up / Page Up
+      if (code === 166 || code === 33) {
         e.preventDefault();
         navigateChannelDelta(-1);
         return;
       }
-      if (code === 167 || code === 34) { // Channel Down / Page Down
+      if (code === 167 || code === 34) {
         e.preventDefault();
         navigateChannelDelta(1);
         return;
       }
 
-      // Volume Up / Down on TV Remote
-      if (code === 24 || code === 175) { // Volume Up
+      if (code === 24 || code === 175) {
         e.preventDefault();
         adjustVolume(0.1);
         return;
       }
-      if (code === 25 || code === 174) { // Volume Down
+      if (code === 25 || code === 174) {
         e.preventDefault();
         adjustVolume(-0.1);
         return;
       }
 
-      // BACK Key
       if (code === 4 || code === 27 || code === 8) {
         if (isPseudoFullscreen) {
           e.preventDefault();
@@ -502,7 +456,6 @@
       if (!fList.length) return;
       var curIdx = fList.indexOf(active);
 
-      // D-PAD UP (19, 38)
       if (code === 19 || code === 38) {
         if (active && active.classList && active.classList.contains('channel-card')) {
           e.preventDefault();
@@ -511,7 +464,6 @@
             prevCard.focus();
             if (prevCard.scrollIntoView) prevCard.scrollIntoView(false);
           } else {
-            // Move focus up into category tabs or search input
             if (searchInput) searchInput.focus();
           }
         } else if (curIdx > 0) {
@@ -520,7 +472,6 @@
         }
       }
 
-      // D-PAD DOWN (20, 40)
       else if (code === 20 || code === 40) {
         if (active && active.classList && active.classList.contains('channel-card')) {
           e.preventDefault();
@@ -529,7 +480,6 @@
             nextCard.focus();
             if (nextCard.scrollIntoView) nextCard.scrollIntoView(false);
           } else {
-            // End of rendered batch reached! Auto-render next batch and focus
             renderNextBatch();
             setTimeout(function() {
               var newlyAdded = active.nextElementSibling;
@@ -552,7 +502,6 @@
         }
       }
 
-      // D-PAD LEFT (21, 37)
       else if (code === 21 || code === 37) {
         if (active && active.classList && active.classList.contains('channel-card')) {
           e.preventDefault();
@@ -567,7 +516,6 @@
         }
       }
 
-      // D-PAD RIGHT (22, 39)
       else if (code === 22 || code === 39) {
         if (active === btnPlayPause || active === btnMute || active === volumeBar || active === btnFullscreen || active === btnPip) {
           e.preventDefault();
@@ -583,7 +531,6 @@
         }
       }
 
-      // D-PAD CENTER or ENTER (23, 13, 66)
       else if (code === 23 || code === 13 || code === 66) {
         if (active) {
           active.click();
@@ -630,7 +577,6 @@
     }
   }
 
-  // Fullscreen & Pseudo-Fullscreen Logic
   function toggleFullscreen() {
     var doc = document;
     var isFull = doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || isPseudoFullscreen;
@@ -647,7 +593,7 @@
     } else {
       var wrap = videoWrapper;
       if (wrap.requestFullscreen) {
-        wrap.requestFullscreen();
+        wrap.requestFullscreen().catch(function() { enterPseudoFullscreen(); });
         if (fullscreenIcon) fullscreenIcon.className = 'fa-solid fa-compress';
       } else if (wrap.webkitRequestFullscreen) {
         wrap.webkitRequestFullscreen();
@@ -678,7 +624,6 @@
     if (fullscreenIcon) fullscreenIcon.className = 'fa-solid fa-expand';
   }
 
-  // Standard UI Listeners
   function setupEventListeners() {
     if (btnPlayPause) btnPlayPause.onclick = togglePlayPause;
     
@@ -744,9 +689,10 @@
       };
     }
 
-    if (btnLoadInbuilt) {
-      btnLoadInbuilt.onclick = function() {
-        loadAllBackgroundPlaylists();
+    if (countryDropdown) {
+      countryDropdown.onchange = function() {
+        var val = countryDropdown.value;
+        loadSelectedCountry(val);
       };
     }
 
@@ -786,7 +732,7 @@
         var url = m3uUrlInput.value.replace(/^\s+|\s+$/g, '');
         if (!url) return;
         if (modalM3u) modalM3u.className = 'modal-overlay';
-        fetchM3U(url, 'Custom', function(err, items) {
+        fetchM3U(url, 'Custom M3U', function(err, items) {
           if (!err && items && items.length > 0) {
             channels = items;
             if (playlistNameDisplay) playlistNameDisplay.innerHTML = 'Custom M3U';
@@ -810,7 +756,6 @@
     }, 2800);
   }
 
-  // Launch application
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
